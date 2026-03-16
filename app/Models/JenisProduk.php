@@ -11,6 +11,7 @@ class JenisProduk extends Model
     protected $fillable = [
         'uuid',
         'id_plan',
+        'id_produk_pusat',
         'nama_produk',
         'user_id',
         'status_bahan',
