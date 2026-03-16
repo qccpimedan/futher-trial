@@ -1,0 +1,66 @@
+{{-- filepath: resources/views/super-admin/produk/edit.blade.php --}}
+@extends('layouts.app')
+@section('container')
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Edit Jenis Produk</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('produk.index') }}">Data Jenis Produk</a></li>
+                        <li class="breadcrumb-item active">Edit Data</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-warning card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">Form Edit Jenis Produk</h3>
+                        </div>
+                        <form action="{{ route('produk.update', $produk->uuid) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="id_plan">Nama Plan</label>
+                                    <select name="id_plan" id="id_plan" class="form-control" required>
+                                        @foreach($plans as $plan)
+                                            <option value="{{ $plan->id }}" {{ $produk->id_plan == $plan->id ? 'selected' : '' }}>{{ $plan->nama_plan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nama_produk">Nama Produk</label>
+                                    <input type="text" name="nama_produk" id="nama_produk" class="form-control" value="{{ $produk->nama_produk }}" placeholder="Masukkan Nama Produk" required>
+                                </div>
+                               <div class="form-group">
+                                    <label for="status_bahan">Jenis Produk</label>
+                                    <select name="status_bahan" id="status_bahan" class="form-control" required>
+                                        <option value="" disabled hidden {{ old('status_bahan', $produk->status_bahan) == '' ? 'selected' : '' }}>Pilih Jenis Produk</option>
+                                        <option value="forming" {{ old('status_bahan', $produk->status_bahan) == 'forming' ? 'selected' : '' }}>Forming</option>
+                                        <option value="non-forming" {{ old('status_bahan', $produk->status_bahan) == 'non-forming' ? 'selected' : '' }}>Non Forming</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Update</button>
+                                <a href="{{ route('produk.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+@endsection
