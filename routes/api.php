@@ -36,42 +36,41 @@ Route::post('/receive-products', function (Request $request) {
     }
 
     // 2. Proses Data dengan "Smart Mapping"
-    // Logika ini mencegah duplikasi dan menjaga relasi tabel lama (seperti formula)
+    // Logika ini mengupdate SEMUA produk dengan nama yang sama agar tersinkron ke pusat
     $products = $request->products;
 
     if ($products) {
         foreach ($products as $item) {
-            // A. Cari apakah produk ini sudah pernah tersambung ke pusat?
-            $produk = JenisProduk::where('id_produk_pusat', $item['id_produk'])->first();
+            // A. Update semua produk yang sudah punya ID Pusat ini
+            $updated = JenisProduk::where('id_produk_pusat', $item['id_produk'])
+                                  ->update([
+                                      'nama_produk' => $item['nama_produk'],
+                                      'updated_at'  => now()
+                                  ]);
 
-            if (!$produk) {
-                // B. Jika belum, cari apakah ada produk lama dengan NAMA yang sama?
-                // Ini penting agar relasi ke tabel formula/transaksi lama tidak rusak.
-                $produk = JenisProduk::where('nama_produk', $item['nama_produk'])
-                                     ->whereNull('id_produk_pusat')
-                                     ->first();
-            }
+            // B. Jika tidak ada yang terupdate lewat ID Pusat, cari lewat NAMA
+            // Update SEMUA (bukan cuma 1) produk lama yang namanya cocok tapi ID pusatnya kosong
+            if ($updated === 0) {
+                $checkByName = JenisProduk::where('nama_produk', $item['nama_produk'])
+                                         ->whereNull('id_produk_pusat');
 
-            if ($produk) {
-                // C. Jika ditemukan (lewat ID atau Nama), update datanya saja.
-                // ID Lokal tetap sama, sehingga data formula tetap aman.
-                $produk->update([
-                    'id_produk_pusat' => $item['id_produk'],
-                    'nama_produk'     => $item['nama_produk'],
-                    'updated_at'      => now()
-                ]);
-            } else {
-                // D. Jika benar-benar produk baru, buat baris baru.
-                JenisProduk::create([
-                    'id_produk_pusat' => $item['id_produk'],
-                    'nama_produk'     => $item['nama_produk'],
-                    'id_plan'         => 1,
-                    'user_id'         => 1,
-                ]);
+                if ($checkByName->exists()) {
+                    $checkByName->update([
+                        'id_produk_pusat' => $item['id_produk'],
+                        'updated_at'      => now()
+                    ]);
+                } else {
+                    // C. Jika benar-benar tidak ada di database, baru buat baris baru
+                    JenisProduk::create([
+                        'id_produk_pusat' => $item['id_produk'],
+                        'nama_produk'     => $item['nama_produk'],
+                        'id_plan'         => 1,
+                        'user_id'         => 1,
+                    ]);
+                }
             }
         }
-        return response()->json(['message' => 'Data Berhasil Disinkronisasi']);
+        return response()->json(['message' => 'Data Berhasil Disinkronisasi (Semua duplikat nama ter-update)']);
     }
     return response()->json(['message' => 'Data Kosong'], 400);
 });
-
